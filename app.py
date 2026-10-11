@@ -188,4 +188,111 @@ game_code = """
           // Ống dưới
           let botY = pipes[i].topHeight + pipes[i].gap;
           ctx.fillRect(pipes[i].x, botY, pipeWidth, cvs.height - 80 - botY);
-          ctx.strokeRect(pipes[i].x, botY
+          ctx.strokeRect(pipes[i].x, botY, pipeWidth, cvs.height - 80 - botY);
+          ctx.fillRect(pipes[i].x - 3, botY, pipeWidth + 6, 20);
+          ctx.strokeRect(pipes[i].x - 3, botY, pipeWidth + 6, 20);
+
+          pipes[i].x -= 1.8; // Giảm tốc độ dịch chuyển của ống cho đồng bộ với độ rơi chậm của bò
+
+          if (pipes[i].x === 130) {
+            pipes.push({
+              x: cvs.width,
+              topHeight: Math.floor(Math.random() * 160) + 50,
+              gap: 130,
+              passed: false
+            });
+          }
+
+          if (pipes[i].x < -60) pipes.shift();
+
+          // Tính điểm
+          if (!pipes[i].passed && pipes[i].x + pipeWidth < cowX) {
+            score++;
+            pipes[i].passed = true;
+          }
+
+          // Va chạm
+          if (
+            cowX + 13 > pipes[i].x && cowX - 13 < pipes[i].x + pipeWidth &&
+            (cowY - 11 < pipes[i].topHeight || cowY + 11 > botY) ||
+            cowY + 12 >= cvs.height - 80 || cowY - 12 <= 0
+          ) {
+            isGameOver = true;
+          }
+        }
+      }
+
+      // Vẽ mặt đất cuộn (Ground)
+      ctx.fillStyle = "#ded895";
+      ctx.fillRect(0, cvs.height - 80, cvs.width, 80);
+      ctx.fillStyle = "#558022";
+      ctx.fillRect(0, cvs.height - 80, cvs.width, 16);
+
+      ctx.fillStyle = "#d0342c";
+      for (let g = groundX; g < cvs.width; g += 24) {
+        ctx.beginPath();
+        ctx.moveTo(g, cvs.height - 80);
+        ctx.lineTo(g + 12, cvs.height - 80);
+        ctx.lineTo(g + 4, cvs.height - 64);
+        ctx.lineTo(g - 8, cvs.height - 64);
+        ctx.fill();
+      }
+
+      drawCow(cowX, cowY, velocity);
+
+      // Hiển thị điểm số
+      if (!isGameOver) {
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 4;
+        ctx.font = "bold 35px Arial";
+        ctx.textAlign = "center";
+        ctx.strokeText(score, cvs.width / 2, 60);
+        ctx.fillText(score, cvs.width / 2, 60);
+      } else {
+        // Bảng Game Over
+        ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+        ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+        ctx.fillStyle = "#ded895";
+        ctx.strokeStyle = "#558022";
+        ctx.lineWidth = 3;
+        ctx.fillRect(60, 130, 200, 180);
+        ctx.strokeRect(60, 130, 200, 180);
+
+        ctx.fillStyle = "#b59e54";
+        ctx.font = "bold 22px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("GAME OVER", cvs.width / 2, 165);
+
+        ctx.fillStyle = "#558022";
+        ctx.font = "16px Arial";
+        ctx.textAlign = "left";
+        ctx.fillText("SCORE", 85, 205);
+        ctx.fillText("BEST", 85, 250);
+
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 20px Arial";
+        ctx.fillText(score, 235, 205);
+        ctx.fillText(bestScore, 235, 250);
+
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 3;
+        ctx.font = "bold 16px Arial";
+        ctx.strokeText("Nhấn Space để chơi lại", cvs.width / 2, 350);
+        ctx.fillText("Nhấn Space để chơi lại", cvs.width / 2, 350);
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    update();
+  </script>
+</body>
+</html>
+"""
+
+components.html(game_code, height=520)
