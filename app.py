@@ -2,7 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(
-    page_title="Flappy Cow - FlappyBird Style",
+    page_title="Flappy Flying Cow - Deluxe Edition",
     page_icon="🐄",
     layout="centered",
     initial_sidebar_state="collapsed"
@@ -10,14 +10,14 @@ st.set_page_config(
 
 st.markdown("""
     <style>
-        .main { background-color: #f1f2f6; }
-        h1 { color: #2f3640; text-align: center; font-family: 'Segoe UI', sans-serif; font-size: 2rem; margin-bottom: 0px; }
-        .instructions { text-align: center; color: #718093; font-size: 0.95rem; margin-bottom: 15px; }
+        .main { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
+        h1 { color: #1e3799; text-align: center; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 2.2rem; margin-bottom: 0px; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
+        .instructions { text-align: center; color: #485460; font-size: 1rem; margin-bottom: 15px; font-weight: 500; }
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1>🐄 Flappy Cow Classic</h1>", unsafe_allow_html=True)
-st.markdown("<div class='instructions'>Nhấn phím <b>Space</b> hoặc <b>Click chuột</b> để điều khiển chú bò bay thong thả qua các ống nước!</div>", unsafe_allow_html=True)
+st.markdown("<h1>🐄 Flappy Flying Cow Deluxe</h1>", unsafe_allow_html=True)
+st.markdown("<div class='instructions'>Nhấn phím <b>Space</b> hoặc <b>Click chuột</b> để điều khiển chú bò bay thong thả lượn sóng!</div>", unsafe_allow_html=True)
 
 game_code = """
 <!DOCTYPE html>
@@ -31,45 +31,55 @@ game_code = """
       background: transparent;
     }
     canvas {
-      border: 3px solid #2f3640;
-      background-color: #70c5ce;
+      border: 4px solid #1e3799;
+      background: linear-gradient(to bottom, #4a69bd, #6a89cc, #786fa6);
       display: block;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-      border-radius: 8px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+      border-radius: 12px;
       outline: none;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="320" height="480" tabindex="1"></canvas>
+  <canvas id="gameCanvas" width="340" height="490" tabindex="1"></canvas>
   <script>
     const cvs = document.getElementById("gameCanvas");
     const ctx = cvs.getContext("2d");
 
-    let cowX = 60, cowY = 200;
-    let gravity = 0.14, velocity = 0, jump = -3.5; // Đã giảm trọng lực và lực nhảy để bò rơi chậm và bồng bềnh hơn
+    let cowX = 70, cowY = 210;
+    let gravity = 0.14, velocity = 0, jump = -3.6;
     let score = 0, bestScore = 0;
-    let isGameOver = false;
+    let gameState = "START"; // START, PLAYING, GAMEOVER
     let groundX = 0;
     let frameCount = 0;
 
-    let pipes = [];
-    pipes[0] = { x: cvs.width, topHeight: 140, gap: 130, passed: false };
+    let clouds = [
+      { x: 50, y: 90, speed: 0.3, size: 25 },
+      { x: 210, y: 150, speed: 0.3, size: 20 },
+      { x: 300, y: 70, speed: 0.3, size: 30 }
+    ];
 
-    function resetGame() {
-      if (score > bestScore) bestScore = score;
-      cowY = 200;
+    let pipes = [];
+
+    function initGame() {
+      cowY = 210;
       velocity = 0;
       score = 0;
-      pipes = [{ x: cvs.width, topHeight: 140, gap: 130, passed: false }];
-      isGameOver = false;
+      pipes = [{ x: cvs.width, topHeight: 140, gap: 135, passed: false }];
     }
 
     function handleInput(e) {
       if (e.code === "Space" || e.type === "click") {
-        if (isGameOver) {
-          resetGame();
-        } else {
+        if (gameState === "START") {
+          gameState = "PLAYING";
+          initGame();
+          velocity = jump;
+        } else if (gameState === "PLAYING") {
+          velocity = jump;
+        } else if (gameState === "GAMEOVER") {
+          if (score > bestScore) bestScore = score;
+          gameState = "PLAYING";
+          initGame();
           velocity = jump;
         }
         if (e.code === "Space") e.preventDefault();
@@ -86,62 +96,75 @@ game_code = """
       let rotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, vel * 0.08));
       ctx.rotate(rotation);
 
-      // Cánh vẫy
-      let wingAngle = Math.sin(frameCount * 0.3) * 0.5;
+      // Cánh vẫy hiệu ứng mượt
+      let wingAngle = Math.sin(frameCount * 0.35) * 0.55;
       ctx.save();
       ctx.translate(-2, -9);
       ctx.rotate(wingAngle);
       ctx.fillStyle = "#ffffff";
-      ctx.strokeStyle = "#333";
-      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = "#2f3640";
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.ellipse(0, -6, 8, 4, -Math.PI / 4, 0, Math.PI * 2);
+      ctx.ellipse(0, -6, 9, 4.5, -Math.PI / 4, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
       ctx.restore();
 
-      // Thân bò
+      // Thân bò bóng bẩy
       ctx.fillStyle = "#ffffff";
-      ctx.strokeStyle = "#2f3640";
+      ctx.strokeStyle = "#1e272c";
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.ellipse(0, 0, 17, 12, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 18, 13, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
-      // Đốm thân
-      ctx.fillStyle = "#2f3640";
+      // Đốm bò phong cách
+      ctx.fillStyle = "#1e272c";
       ctx.beginPath();
-      ctx.arc(-4, -2, 5, 0, Math.PI * 2);
-      ctx.arc(3, 3, 3, 0, Math.PI * 2);
+      ctx.arc(-4, -2, 5.5, 0, Math.PI * 2);
+      ctx.arc(3, 4, 3.5, 0, Math.PI * 2);
       ctx.fill();
 
       // Đầu bò
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
-      ctx.arc(13, -4, 8.5, 0, Math.PI * 2);
+      ctx.arc(14, -4, 9, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
+
+      // Má hồng dễ thương
+      ctx.fillStyle = "rgba(255, 107, 129, 0.4)";
+      ctx.beginPath();
+      ctx.arc(17, 0, 3.5, 0, Math.PI * 2);
+      ctx.fill();
 
       // Mõm hồng
       ctx.fillStyle = "#ffb6c1";
       ctx.beginPath();
-      ctx.ellipse(18, -2, 4, 3, 0, 0, Math.PI * 2);
+      ctx.ellipse(19, -2, 4.5, 3.5, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
       // Mắt
       ctx.fillStyle = "#000";
       ctx.beginPath();
-      ctx.arc(15, -7, 1.2, 0, Math.PI * 2);
+      ctx.arc(16, -7, 1.3, 0, Math.PI * 2);
+      ctx.fill();
+      // Ánh sáng trong mắt
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(16.5, -7.5, 0.4, 0, Math.PI * 2);
       ctx.fill();
 
-      // Sừng
+      // Sừng bóng
       ctx.fillStyle = "#dcdde1";
+      ctx.strokeStyle = "#1e272c";
+      ctx.lineWidth = 1.2;
       ctx.beginPath();
-      ctx.moveTo(10, -11);
-      ctx.lineTo(13, -16);
-      ctx.lineTo(16, -11);
+      ctx.moveTo(11, -12);
+      ctx.lineTo(14, -17);
+      ctx.lineTo(17, -12);
       ctx.fill();
       ctx.stroke();
 
@@ -151,139 +174,185 @@ game_code = """
     function update() {
       frameCount++;
 
-      // Nền trời xanh cổ điển
-      ctx.fillStyle = "#70c5ce";
+      // Vẽ nền trời chuyển sắc động
+      let bgGrad = ctx.createLinearGradient(0, 0, 0, cvs.height);
+      bgGrad.addColorStop(0, "#4a69bd");
+      bgGrad.addColorStop(0.5, "#6a89cc");
+      bgGrad.addColorStop(1, "#82ccdd");
+      ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, cvs.width, cvs.height);
 
-      // Đám mây phong cách cổ điển
-      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-      ctx.beginPath();
-      ctx.arc(60, 100, 25, 0, Math.PI * 2);
-      ctx.arc(85, 90, 20, 0, Math.PI * 2);
-      ctx.arc(220, 160, 30, 0, Math.PI * 2);
-      ctx.fill();
+      // Vẽ mây trôi
+      ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+      for (let c of clouds) {
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, c.size, 0, Math.PI * 2);
+        ctx.arc(c.x + c.size * 0.6, c.y - c.size * 0.3, c.size * 0.7, 0, Math.PI * 2);
+        ctx.arc(c.x + c.size * 1.2, c.y, c.size * 0.8, 0, Math.PI * 2);
+        ctx.fill();
+        c.x -= c.speed;
+        if (c.x < -60) c.x = cvs.width + 60;
+      }
 
-      if (!isGameOver) {
+      if (gameState === "PLAYING") {
         velocity += gravity;
         cowY += velocity;
 
-        // Cuộn mặt đất
         groundX -= 1.8;
-        if (groundX <= -24) groundX = 0;
+        if (groundX <= -28) groundX = 0;
 
-        // Xử lý ống
         for (let i = 0; i < pipes.length; i++) {
-          ctx.fillStyle = "#73bf2e";
-          ctx.strokeStyle = "#558022";
+          // Ống nước gradient sinh động
+          let pWidth = 54;
+          let pipeGrad = ctx.createLinearGradient(pipes[i].x, 0, pipes[i].x + pWidth, 0);
+          pipeGrad.addColorStop(0, "#2ecc71");
+          pipeGrad.addColorStop(0.5, "#27ae60");
+          pipeGrad.addColorStop(1, "#1e8449");
+
+          ctx.fillStyle = pipeGrad;
+          ctx.strokeStyle = "#145a32";
           ctx.lineWidth = 2;
 
-          let pipeWidth = 52;
-          
           // Ống trên
-          ctx.fillRect(pipes[i].x, 0, pipeWidth, pipes[i].topHeight);
-          ctx.strokeRect(pipes[i].x, 0, pipeWidth, pipes[i].topHeight);
-          ctx.fillRect(pipes[i].x - 3, pipes[i].topHeight - 20, pipeWidth + 6, 20);
-          ctx.strokeRect(pipes[i].x - 3, pipes[i].topHeight - 20, pipeWidth + 6, 20);
+          ctx.fillRect(pipes[i].x, 0, pWidth, pipes[i].topHeight);
+          ctx.strokeRect(pipes[i].x, 0, pWidth, pipes[i].topHeight);
+          // Miệng ống trên
+          ctx.fillRect(pipes[i].x - 4, pipes[i].topHeight - 22, pWidth + 8, 22);
+          ctx.strokeRect(pipes[i].x - 4, pipes[i].topHeight - 22, pWidth + 8, 22);
 
           // Ống dưới
           let botY = pipes[i].topHeight + pipes[i].gap;
-          ctx.fillRect(pipes[i].x, botY, pipeWidth, cvs.height - 80 - botY);
-          ctx.strokeRect(pipes[i].x, botY, pipeWidth, cvs.height - 80 - botY);
-          ctx.fillRect(pipes[i].x - 3, botY, pipeWidth + 6, 20);
-          ctx.strokeRect(pipes[i].x - 3, botY, pipeWidth + 6, 20);
+          ctx.fillRect(pipes[i].x, botY, pWidth, cvs.height - 85 - botY);
+          ctx.strokeRect(pipes[i].x, botY, pWidth, cvs.height - 85 - botY);
+          // Miệng ống dưới
+          ctx.fillRect(pipes[i].x - 4, botY, pWidth + 8, 22);
+          ctx.strokeRect(pipes[i].x - 4, botY, pWidth + 8, 22);
 
-          pipes[i].x -= 1.8; // Giảm tốc độ dịch chuyển của ống cho đồng bộ với độ rơi chậm của bò
+          pipes[i].x -= 1.8;
 
-          if (pipes[i].x === 130) {
+          if (pipes[i].x === 140) {
             pipes.push({
               x: cvs.width,
-              topHeight: Math.floor(Math.random() * 160) + 50,
-              gap: 130,
+              topHeight: Math.floor(Math.random() * 170) + 50,
+              gap: 135,
               passed: false
             });
           }
 
-          if (pipes[i].x < -60) pipes.shift();
+          if (pipes[i].x < -70) pipes.shift();
 
-          // Tính điểm
-          if (!pipes[i].passed && pipes[i].x + pipeWidth < cowX) {
+          if (!pipes[i].passed && pipes[i].x + pWidth < cowX) {
             score++;
             pipes[i].passed = true;
           }
 
           // Va chạm
           if (
-            cowX + 13 > pipes[i].x && cowX - 13 < pipes[i].x + pipeWidth &&
-            (cowY - 11 < pipes[i].topHeight || cowY + 11 > botY) ||
-            cowY + 12 >= cvs.height - 80 || cowY - 12 <= 0
+            cowX + 15 > pipes[i].x && cowX - 15 < pipes[i].x + pWidth &&
+            (cowY - 12 < pipes[i].topHeight || cowY + 12 > botY) ||
+            cowY + 13 >= cvs.height - 85 || cowY - 13 <= 0
           ) {
-            isGameOver = true;
+            gameState = "GAMEOVER";
           }
         }
       }
 
-      // Vẽ mặt đất cuộn (Ground)
-      ctx.fillStyle = "#ded895";
-      ctx.fillRect(0, cvs.height - 80, cvs.width, 80);
-      ctx.fillStyle = "#558022";
-      ctx.fillRect(0, cvs.height - 80, cvs.width, 16);
+      // Vẽ mặt đất hiện đại, sắc nét
+      let groundY = cvs.height - 85;
+      ctx.fillStyle = "#f1c40f"; // Đất cát vàng ấm
+      ctx.fillRect(0, groundY, cvs.width, 85);
+      ctx.fillStyle = "#27ae60"; // Lớp cỏ xanh mướt phía trên
+      ctx.fillRect(0, groundY, cvs.width, 18);
 
-      ctx.fillStyle = "#d0342c";
-      for (let g = groundX; g < cvs.width; g += 24) {
+      // Đường sọc mặt đất
+      ctx.fillStyle = "#d35400";
+      for (let g = groundX; g < cvs.width; g += 28) {
         ctx.beginPath();
-        ctx.moveTo(g, cvs.height - 80);
-        ctx.lineTo(g + 12, cvs.height - 80);
-        ctx.lineTo(g + 4, cvs.height - 64);
-        ctx.lineTo(g - 8, cvs.height - 64);
+        ctx.moveTo(g, groundY);
+        ctx.lineTo(g + 14, groundY);
+        ctx.lineTo(g + 5, groundY + 18);
+        ctx.lineTo(g - 9, groundY + 18);
         ctx.fill();
       }
 
-      drawCow(cowX, cowY, velocity);
+      // Vẽ chú bò
+      if (gameState === "START") {
+        // Hiệu ứng bồng bềnh nhẹ ở màn hình chờ
+        let hoverY = 210 + Math.sin(frameCount * 0.08) * 8;
+        drawCow(cowX, hoverY, 0);
+      } else {
+        drawCow(cowX, cowY, velocity);
+      }
 
-      // Hiển thị điểm số
-      if (!isGameOver) {
+      // Giao diện hiển thị điểm & màn hình
+      if (gameState === "PLAYING") {
         ctx.fillStyle = "#ffffff";
-        ctx.strokeStyle = "#000000";
+        ctx.strokeStyle = "#1e3799";
         ctx.lineWidth = 4;
-        ctx.font = "bold 35px Arial";
+        ctx.font = "bold 38px 'Segoe UI', sans-serif";
         ctx.textAlign = "center";
         ctx.strokeText(score, cvs.width / 2, 60);
         ctx.fillText(score, cvs.width / 2, 60);
-      } else {
-        // Bảng Game Over
-        ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+      } else if (gameState === "START") {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
         ctx.fillRect(0, 0, cvs.width, cvs.height);
 
-        ctx.fillStyle = "#ded895";
-        ctx.strokeStyle = "#558022";
-        ctx.lineWidth = 3;
-        ctx.fillRect(60, 130, 200, 180);
-        ctx.strokeRect(60, 130, 200, 180);
-
-        ctx.fillStyle = "#b59e54";
-        ctx.font = "bold 22px Arial";
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 24px 'Segoe UI', sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("GAME OVER", cvs.width / 2, 165);
+        ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+        ctx.shadowBlur = 6;
+        ctx.fillText("Nhấn Space để Bắt Đầu", cvs.width / 2, cvs.height / 2 + 30);
+        ctx.shadowBlur = 0;
+      } else if (gameState === "GAMEOVER") {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+        ctx.fillRect(0, 0, cvs.width, cvs.height);
 
-        ctx.fillStyle = "#558022";
-        ctx.font = "16px Arial";
+        // Bảng điểm hiện đại bo tròn góc
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = "#1e3799";
+        ctx.lineWidth = 3;
+        let bx = 50, by = 130, bw = 240, bh = 200, radius = 16;
+        
+        ctx.beginPath();
+        ctx.moveTo(bx + radius, by);
+        ctx.lineTo(bx + bw - radius, by);
+        ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + radius);
+        ctx.lineTo(bx + bw, by + bh - radius);
+        ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - radius, by + bh);
+        ctx.lineTo(bx + radius, by + bh);
+        ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - radius);
+        ctx.lineTo(bx, by + radius);
+        ctx.quadraticCurveTo(bx, by, bx + radius, by);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#e74c3c";
+        ctx.font = "bold 24px 'Segoe UI', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("GAME OVER", cvs.width / 2, by + 45);
+
+        ctx.fillStyle = "#2f3640";
+        ctx.font = "16px 'Segoe UI', sans-serif";
         ctx.textAlign = "left";
-        ctx.fillText("SCORE", 85, 205);
-        ctx.fillText("BEST", 85, 250);
+        ctx.fillText("Điểm hiện tại", bx + 25, by + 95);
+        ctx.fillText("Kỷ lục cao nhất", bx + 25, by + 140);
 
         ctx.textAlign = "right";
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 20px Arial";
-        ctx.fillText(score, 235, 205);
-        ctx.fillText(bestScore, 235, 250);
+        ctx.font = "bold 20px 'Segoe UI', sans-serif";
+        ctx.fillStyle = "#27ae60";
+        ctx.fillText(score, bx + bw - 25, by + 95);
+        ctx.fillText(bestScore, bx + bw - 25, by + 140);
 
+        // Hướng dẫn chơi lại
         ctx.textAlign = "center";
         ctx.fillStyle = "#ffffff";
         ctx.strokeStyle = "#000000";
         ctx.lineWidth = 3;
-        ctx.font = "bold 16px Arial";
-        ctx.strokeText("Nhấn Space để chơi lại", cvs.width / 2, 350);
-        ctx.fillText("Nhấn Space để chơi lại", cvs.width / 2, 350);
+        ctx.font = "bold 16px 'Segoe UI', sans-serif";
+        ctx.strokeText("Nhấn Space để chơi lại", cvs.width / 2, 380);
+        ctx.fillText("Nhấn Space để chơi lại", cvs.width / 2, 380);
       }
 
       requestAnimationFrame(update);
