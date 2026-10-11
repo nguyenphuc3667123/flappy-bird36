@@ -1,7 +1,6 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-# Cấu hình trang gọn gàng, tối ưu giao diện trung tâm
 st.set_page_config(
     page_title="Flappy Flying Cow",
     page_icon="🐄",
@@ -9,7 +8,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Giao diện Streamlit tối giản, tập trung vào trò chơi
 st.markdown("""
     <style>
         .main { background-color: #f8f9fa; }
@@ -19,9 +17,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("<h1>🐄 Flappy Flying Cow</h1>", unsafe_allow_html=True)
-st.markdown("<div class='instructions'>Nhấn <b>Space</b> hoặc <b>Click chuột</b> vào khung game để điều khiển chú bò bay!</div>", unsafe_allow_html=True)
+st.markdown("<div class='instructions'>Nhấn <b>Space</b> hoặc <b>Click chuột</b> vào khung game để điều khiển chú bò bay thong thả!</div>", unsafe_allow_html=True)
 
-# Mã nguồn HTML/JS của game được thiết kế gọn đẹp, hiện đại
 game_code = """
 <!DOCTYPE html>
 <html>
@@ -50,23 +47,23 @@ game_code = """
     const ctx = cvs.getContext("2d");
 
     let cowX = 60, cowY = 220;
-    let gravity = 0.23, velocity = 0, jump = -4.4;
+    let gravity = 0.15, velocity = 0, jump = -3.8; // Đã giảm trọng lực để bò rơi chậm hơn
     let score = 0, frameCount = 0;
     let isGameOver = false;
 
     let clouds = [
-      { x: 40, y: 70, speed: 0.4 },
-      { x: 200, y: 140, speed: 0.4 },
-      { x: 330, y: 90, speed: 0.4 }
+      { x: 40, y: 70, speed: 0.3 },
+      { x: 200, y: 140, speed: 0.3 },
+      { x: 330, y: 90, speed: 0.3 }
     ];
 
-    let pipes = [{ x: 360, topHeight: 150, gap: 130 }];
+    let pipes = [{ x: 360, topHeight: 150, gap: 140 }];
 
     function resetGame() {
       cowY = 220;
       velocity = 0;
       score = 0;
-      pipes = [{ x: 360, topHeight: 150, gap: 130 }];
+      pipes = [{ x: 360, topHeight: 150, gap: 140 }];
       isGameOver = false;
     }
 
@@ -161,14 +158,12 @@ game_code = """
     function update() {
       frameCount++;
       
-      // Vẽ nền trời
       let grad = ctx.createLinearGradient(0, 0, 0, cvs.height);
       grad.addColorStop(0, "#2980b9");
       grad.addColorStop(1, "#6dd5fa");
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, cvs.width, cvs.height);
 
-      // Mây trôi
       ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
       for (let c of clouds) {
         ctx.beginPath();
@@ -184,39 +179,35 @@ game_code = """
         velocity += gravity;
         cowY += velocity;
 
-        // Xử lý ống
         for (let i = 0; i < pipes.length; i++) {
           let pColor = "#27ae60", pBorder = "#1e8449";
           ctx.fillStyle = pColor;
           ctx.strokeStyle = pBorder;
           ctx.lineWidth = 2;
 
-          // Ống trên
           ctx.fillRect(pipes[i].x, 0, 48, pipes[i].topHeight);
           ctx.strokeRect(pipes[i].x, 0, 48, pipes[i].topHeight);
           ctx.fillRect(pipes[i].x - 3, pipes[i].topHeight - 18, 54, 18);
           ctx.strokeRect(pipes[i].x - 3, pipes[i].topHeight - 18, 54, 18);
 
-          // Ống dưới
           let botY = pipes[i].topHeight + pipes[i].gap;
           ctx.fillRect(pipes[i].x, botY, 48, cvs.height - botY);
           ctx.strokeRect(pipes[i].x, botY, 48, cvs.height - botY);
           ctx.fillRect(pipes[i].x - 3, botY, 54, 18);
           ctx.strokeRect(pipes[i].x - 3, botY, 54, 18);
 
-          pipes[i].x -= 2.2;
+          pipes[i].x -= 2.0; // Giảm tốc độ ống chạy một chút cho đồng bộ
 
           if (pipes[i].x === 140) {
             pipes.push({
               x: cvs.width,
               topHeight: Math.floor(Math.random() * 190) + 60,
-              gap: 130
+              gap: 140
             });
           }
 
           if (pipes[i].x < -60) pipes.shift();
 
-          // Va chạm
           if (
             cowX + 15 > pipes[i].x && cowX - 15 < pipes[i].x + 48 &&
             (cowY - 11 < pipes[i].topHeight || cowY + 11 > botY) ||
@@ -225,13 +216,12 @@ game_code = """
             isGameOver = true;
           }
 
-          if (Math.abs(pipes[i].x - cowX) < 1.1) score++;
+          if (Math.abs(pipes[i].x - cowX) < 1.0) score++;
         }
       }
 
       drawCow(cowX, cowY, velocity);
 
-      // Điểm số hoặc thông báo Game Over
       if (isGameOver) {
         ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
         ctx.fillRect(0, 0, cvs.width, cvs.height);
@@ -263,5 +253,4 @@ game_code = """
 </html>
 """
 
-# Hiển thị game gọn gàng trên giao diện Streamlit
 components.html(game_code, height=520)
