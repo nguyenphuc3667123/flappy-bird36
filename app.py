@@ -2,7 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(
-    page_title="Flappy Flying Cow - Large Edition",
+    page_title="Flappy Flying Cow - Deluxe Edition",
     page_icon="🐄",
     layout="centered",
     initial_sidebar_state="collapsed"
@@ -16,8 +16,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1>🐄 Flappy Flying Cow (Bản Phóng To)</h1>", unsafe_allow_html=True)
-st.markdown("<div class='instructions'>Nhấn phím <b>Space</b> hoặc <b>Click chuột</b> vào khung game để điều khiển chú bò bay!</div>", unsafe_allow_html=True)
+st.markdown("<h1>🐄 Flappy Flying Cow</h1>", unsafe_allow_html=True)
+st.markdown("<div class='instructions'>Press the <b>Spacebar</b> or <b>Click</b> inside the game area to fly!</div>", unsafe_allow_html=True)
 
 game_code = """
 <!DOCTYPE html>
@@ -41,7 +41,6 @@ game_code = """
   </style>
 </head>
 <body>
-  <!-- Phóng to màn hình canvas lên 400x600 -->
   <canvas id="gameCanvas" width="400" height="600" tabindex="1"></canvas>
   <script>
     const cvs = document.getElementById("gameCanvas");
@@ -97,10 +96,9 @@ game_code = """
       let rotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, vel * 0.08));
       ctx.rotate(rotation);
 
-      // Phóng to kích thước chú bò cho cân đối màn hình
       ctx.scale(1.3, 1.3);
 
-      // Cánh vẫy
+      // Flapping wing
       let wingAngle = Math.sin(frameCount * 0.35) * 0.55;
       ctx.save();
       ctx.translate(-2, -9);
@@ -114,7 +112,7 @@ game_code = """
       ctx.stroke();
       ctx.restore();
 
-      // Thân bò
+      // Cow body
       ctx.fillStyle = "#ffffff";
       ctx.strokeStyle = "#1e272c";
       ctx.lineWidth = 2;
@@ -123,34 +121,34 @@ game_code = """
       ctx.fill();
       ctx.stroke();
 
-      // Đốm bò
+      // Body spots
       ctx.fillStyle = "#1e272c";
       ctx.beginPath();
       ctx.arc(-4, -2, 5.5, 0, Math.PI * 2);
       ctx.arc(3, 4, 3.5, 0, Math.PI * 2);
       ctx.fill();
 
-      // Đầu bò
+      // Cow head
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
       ctx.arc(14, -4, 9, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
-      // Má hồng
+      // Blush cheeks
       ctx.fillStyle = "rgba(255, 107, 129, 0.4)";
       ctx.beginPath();
       ctx.arc(17, 0, 3.5, 0, Math.PI * 2);
       ctx.fill();
 
-      // Mõm hồng
+      // Pink snout
       ctx.fillStyle = "#ffb6c1";
       ctx.beginPath();
       ctx.ellipse(19, -2, 4.5, 3.5, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
-      // Mắt
+      // Eye
       ctx.fillStyle = "#000";
       ctx.beginPath();
       ctx.arc(16, -7, 1.3, 0, Math.PI * 2);
@@ -160,7 +158,7 @@ game_code = """
       ctx.arc(16.5, -7.5, 0.4, 0, Math.PI * 2);
       ctx.fill();
 
-      // Sừng
+      // Horns
       ctx.fillStyle = "#dcdde1";
       ctx.strokeStyle = "#1e272c";
       ctx.lineWidth = 1.2;
@@ -177,7 +175,7 @@ game_code = """
     function update() {
       frameCount++;
 
-      // Nền trời
+      // Sky background
       let bgGrad = ctx.createLinearGradient(0, 0, 0, cvs.height);
       bgGrad.addColorStop(0, "#4a69bd");
       bgGrad.addColorStop(0.5, "#6a89cc");
@@ -185,7 +183,7 @@ game_code = """
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, cvs.width, cvs.height);
 
-      // Mây trôi
+      // Clouds
       ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
       for (let c of clouds) {
         ctx.beginPath();
@@ -206,9 +204,9 @@ game_code = """
         groundX -= 2.0;
         if (groundX <= -32) groundX = 0;
 
-        // Xử lý ống
+        // Pipe logic
         for (let i = 0; i < pipes.length; i++) {
-          let pWidth = 64; // Tăng độ rộng ống cho tương xứng màn hình to
+          let pWidth = 64;
           let pipeGrad = ctx.createLinearGradient(pipes[i].x, 0, pipes[i].x + pWidth, 0);
           pipeGrad.addColorStop(0, "#2ecc71");
           pipeGrad.addColorStop(0.5, "#27ae60");
@@ -218,13 +216,13 @@ game_code = """
           ctx.strokeStyle = "#145a32";
           ctx.lineWidth = 2;
 
-          // Ống trên
+          // Top pipe
           ctx.fillRect(pipes[i].x, 0, pWidth, pipes[i].topHeight);
           ctx.strokeRect(pipes[i].x, 0, pWidth, pipes[i].topHeight);
           ctx.fillRect(pipes[i].x - 5, pipes[i].topHeight - 25, pWidth + 10, 25);
           ctx.strokeRect(pipes[i].x - 5, pipes[i].topHeight - 25, pWidth + 10, 25);
 
-          // Ống dưới
+          // Bottom pipe
           let botY = pipes[i].topHeight + pipes[i].gap;
           ctx.fillRect(pipes[i].x, botY, pWidth, cvs.height - groundHeight - botY);
           ctx.strokeRect(pipes[i].x, botY, pWidth, cvs.height - groundHeight - botY);
@@ -249,7 +247,7 @@ game_code = """
             pipes[i].passed = true;
           }
 
-          // Kiểm tra va chạm (tính theo hitbox chú bò phóng to)
+          // Collision detection
           let cowRadius = 18;
           if (
             cowX + cowRadius > pipes[i].x && cowX - cowRadius < pipes[i].x + pWidth &&
@@ -261,7 +259,7 @@ game_code = """
         }
       }
 
-      // Vẽ mặt đất lớn hơn
+      // Ground
       let groundY = cvs.height - groundHeight;
       ctx.fillStyle = "#f1c40f";
       ctx.fillRect(0, groundY, cvs.width, groundHeight);
@@ -278,7 +276,7 @@ game_code = """
         ctx.fill();
       }
 
-      // Vẽ chú bò
+      // Draw cow
       if (gameState === "START") {
         let hoverY = 260 + Math.sin(frameCount * 0.08) * 10;
         drawCow(cowX, hoverY, 0);
@@ -286,7 +284,7 @@ game_code = """
         drawCow(cowX, cowY, velocity);
       }
 
-      // Hiển thị điểm số & giao diện
+      // UI Screens and Score
       if (gameState === "PLAYING") {
         ctx.fillStyle = "#ffffff";
         ctx.strokeStyle = "#1e3799";
@@ -303,4 +301,4 @@ game_code = """
         ctx.font = "bold 26px 'Segoe UI', sans-serif";
         ctx.textAlign = "center";
         ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-        ctx.shadowBlur = 6
+        ctx
