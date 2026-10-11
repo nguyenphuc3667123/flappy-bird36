@@ -8,154 +8,138 @@
     body {
       margin: 0;
       padding: 0;
-      background: #2c3e50;
+      background: #1e272c;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       height: 100vh;
       overflow: hidden;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: Arial, sans-serif;
       touch-action: manipulation;
     }
     h1 {
-      color: #ecf0f1;
-      margin-bottom: 10px;
-      font-size: 1.8rem;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      color: #fff;
+      margin-bottom: 8px;
+      font-size: 1.5rem;
     }
     canvas {
-      border: 4px solid #1abc9c;
-      background: linear-gradient(to bottom, #4a69bd, #786fa6);
-      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-      border-radius: 12px;
+      border: 3px solid #fff;
+      background: #70c5ce;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      border-radius: 8px;
       outline: none;
-      max-width: 100%;
-      height: auto;
     }
   </style>
 </head>
 <body>
 
   <h1>🐄 Flappy Flying Cow</h1>
-  <canvas id="gameCanvas" width="380" height="540" tabindex="1"></canvas>
+  <canvas id="gameCanvas" width="320" height="480" tabindex="1"></canvas>
 
   <script>
-    const cvs = document.getElementById("gameCanvas");
-    const ctx = cvs.getContext("2d");
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
-    let cowX = 80, cowY = 240;
-    let gravity = 0.16, velocity = 0, jump = -4.0;
+    let cowX = 60, cowY = 200;
+    let gravity = 0.18, lift = -4.2, velocity = 0;
     let score = 0, bestScore = 0;
-    let gameState = "START"; // START, PLAYING, GAMEOVER
-    let groundX = 0;
-    let frameCount = 0;
-
-    let clouds = [
-      { x: 50, y: 90, speed: 0.3, size: 26 },
-      { x: 220, y: 160, speed: 0.3, size: 20 },
-      { x: 340, y: 70, speed: 0.3, size: 30 }
-    ];
+    let isGameOver = false, gameStarted = false;
+    let groundX = 0, frameCount = 0;
 
     let pipes = [];
+    pipes[0] = { x: canvas.width, topHeight: 130, gap: 130, passed: false };
 
-    function initGame() {
-      cowY = 240;
+    function resetGame() {
+      if (score > bestScore) bestScore = score;
+      cowY = 200;
       velocity = 0;
       score = 0;
-      pipes = [{ x: cvs.width, topHeight: 160, gap: 140, passed: false }];
+      pipes = [{ x: canvas.width, topHeight: 130, gap: 130, passed: false }];
+      isGameOver = false;
+      gameStarted = true;
     }
 
-    function handleInput(e) {
-      if (e.code === "Space" || e.type === "click" || e.type === "touchstart") {
-        if (gameState === "START") {
-          gameState = "PLAYING";
-          initGame();
-          velocity = jump;
-        } else if (gameState === "PLAYING") {
-          velocity = jump;
-        } else if (gameState === "GAMEOVER") {
-          if (score > bestScore) bestScore = score;
-          gameState = "PLAYING";
-          initGame();
-          velocity = jump;
-        }
-        if (e && e.code === "Space") e.preventDefault();
+    function triggerAction(e) {
+      if (e) e.preventDefault();
+      if (!gameStarted) {
+        gameStarted = true;
+      } else if (isGameOver) {
+        resetGame();
+      } else {
+        velocity = lift;
       }
     }
 
-    window.addEventListener("keydown", handleInput);
-    cvs.addEventListener("click", handleInput);
-    cvs.addEventListener("touchstart", (e) => {
-      e.preventDefault();
-      handleInput(e);
-    }, { passive: false });
-    cvs.focus();
+    window.addEventListener("keydown", (e) => {
+      if (e.code === "Space") triggerAction(e);
+    });
+    canvas.addEventListener("click", triggerAction);
+    canvas.addEventListener("touchstart", triggerAction, { passive: false });
+    canvas.focus();
 
     function drawCow(x, y, vel) {
       ctx.save();
       ctx.translate(x, y);
-      let rotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, vel * 0.08));
-      ctx.rotate(rotation);
+      let rot = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, vel * 0.08));
+      ctx.rotate(rot);
 
-      // Wing flapping
-      let wingAngle = Math.sin(frameCount * 0.35) * 0.55;
+      // Wings
+      let wingAngle = Math.sin(frameCount * 0.4) * 0.5;
       ctx.save();
       ctx.translate(-2, -8);
       ctx.rotate(wingAngle);
-      ctx.fillStyle = "#ffffff";
-      ctx.strokeStyle = "#2f3640";
-      ctx.lineWidth = 1.2;
+      ctx.fillStyle = "#fff";
+      ctx.strokeStyle = "#333";
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.ellipse(0, -5, 8, 4, -Math.PI / 4, 0, Math.PI * 2);
+      ctx.ellipse(0, -4, 7, 3.5, -Math.PI / 4, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
       ctx.restore();
 
       // Body
-      ctx.fillStyle = "#ffffff";
-      ctx.strokeStyle = "#1e272c";
+      ctx.fillStyle = "#fff";
+      ctx.strokeStyle = "#333";
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.ellipse(0, 0, 17, 12, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 16, 11, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
-      // Body spots
-      ctx.fillStyle = "#1e272c";
+      // Spots
+      ctx.fillStyle = "#333";
       ctx.beginPath();
-      ctx.arc(-4, -2, 5, 0, Math.PI * 2);
-      ctx.arc(3, 3, 3, 0, Math.PI * 2);
+      ctx.arc(-3, -2, 4.5, 0, Math.PI * 2);
+      ctx.arc(3, 3, 2.5, 0, Math.PI * 2);
       ctx.fill();
 
       // Head
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = "#fff";
       ctx.beginPath();
-      ctx.arc(13, -4, 8.5, 0, Math.PI * 2);
+      ctx.arc(12, -4, 8, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
-      // Pink snout
+      // Snout
       ctx.fillStyle = "#ffb6c1";
       ctx.beginPath();
-      ctx.ellipse(18, -2, 4, 3, 0, 0, Math.PI * 2);
+      ctx.ellipse(17, -2, 3.5, 2.5, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
       // Eye
       ctx.fillStyle = "#000";
       ctx.beginPath();
-      ctx.arc(15, -7, 1.2, 0, Math.PI * 2);
+      ctx.arc(14, -6, 1.2, 0, Math.PI * 2);
       ctx.fill();
 
       // Horns
       ctx.fillStyle = "#dcdde1";
-      ctx.strokeStyle = "#1e272c";
-      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(10, -11);
-      ctx.lineTo(13, -16);
-      ctx.lineTo(16, -11);
+      ctx.moveTo(9, -10);
+      ctx.lineTo(12, -15);
+      ctx.lineTo(15, -10);
       ctx.fill();
       ctx.stroke();
 
@@ -165,178 +149,149 @@
     function update() {
       frameCount++;
 
-      // Sky background
-      let bgGrad = ctx.createLinearGradient(0, 0, 0, cvs.height);
-      bgGrad.addColorStop(0, "#4a69bd");
-      bgGrad.addColorStop(1, "#786fa6");
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, cvs.width, cvs.height);
+      // Background
+      ctx.fillStyle = "#70c5ce";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Clouds
       ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-      for (let c of clouds) {
-        ctx.beginPath();
-        ctx.arc(c.x, c.y, c.size, 0, Math.PI * 2);
-        ctx.arc(c.x + c.size * 0.6, c.y - c.size * 0.3, c.size * 0.7, 0, Math.PI * 2);
-        ctx.arc(c.x + c.size * 1.2, c.y, c.size * 0.8, 0, Math.PI * 2);
-        ctx.fill();
-        c.x -= c.speed;
-        if (c.x < -60) c.x = cvs.width + 60;
-      }
+      ctx.beginPath();
+      ctx.arc(50, 80, 20, 0, Math.PI * 2);
+      ctx.arc(70, 70, 15, 0, Math.PI * 2);
+      ctx.arc(240, 140, 25, 0, Math.PI * 2);
+      ctx.fill();
 
-      let groundHeight = 85;
-
-      if (gameState === "PLAYING") {
+      if (gameStarted && !isGameOver) {
         velocity += gravity;
         cowY += velocity;
 
-        groundX -= 1.8;
-        if (groundX <= -28) groundX = 0;
+        groundX -= 2;
+        if (groundX <= -24) groundX = 0;
 
-        // Pipe logic
+        // Pipes
         for (let i = 0; i < pipes.length; i++) {
-          let pWidth = 56;
-          let pipeGrad = ctx.createLinearGradient(pipes[i].x, 0, pipes[i].x + pWidth, 0);
-          pipeGrad.addColorStop(0, "#2ecc71");
-          pipeGrad.addColorStop(1, "#1e8449");
-
-          ctx.fillStyle = pipeGrad;
-          ctx.strokeStyle = "#145a32";
+          ctx.fillStyle = "#73bf2e";
+          ctx.strokeStyle = "#558022";
           ctx.lineWidth = 2;
 
-          // Top pipe
-          ctx.fillRect(pipes[i].x, 0, pWidth, pipes[i].topHeight);
-          ctx.strokeRect(pipes[i].x, 0, pWidth, pipes[i].topHeight);
-          ctx.fillRect(pipes[i].x - 4, pipes[i].topHeight - 22, pWidth + 8, 22);
-          ctx.strokeRect(pipes[i].x - 4, pipes[i].topHeight - 22, pWidth + 8, 22);
+          let pWidth = 50;
+          let p = pipes[i];
 
-          // Bottom pipe
-          let botY = pipes[i].topHeight + pipes[i].gap;
-          ctx.fillRect(pipes[i].x, botY, pWidth, cvs.height - groundHeight - botY);
-          ctx.strokeRect(pipes[i].x, botY, pWidth, cvs.height - groundHeight - botY);
-          ctx.fillRect(pipes[i].x - 4, botY, pWidth + 8, 22);
-          ctx.strokeRect(pipes[i].x - 4, botY, pWidth + 8, 22);
+          // Top Pipe
+          ctx.fillRect(p.x, 0, pWidth, p.topHeight);
+          ctx.strokeRect(p.x, 0, pWidth, p.topHeight);
+          ctx.fillRect(p.x - 3, p.topHeight - 18, pWidth + 6, 18);
+          ctx.strokeRect(p.x - 3, p.topHeight - 18, pWidth + 6, 18);
 
-          pipes[i].x -= 1.8;
+          // Bottom Pipe
+          let botY = p.topHeight + p.gap;
+          ctx.fillRect(p.x, botY, pWidth, canvas.height - 70 - botY);
+          ctx.strokeRect(p.x, botY, pWidth, canvas.height - 70 - botY);
+          ctx.fillRect(p.x - 3, botY, pWidth + 6, 18);
+          ctx.strokeRect(p.x - 3, botY, pWidth + 6, 18);
 
-          if (pipes[i].x === 140) {
+          p.x -= 2;
+
+          if (p.x === 130) {
             pipes.push({
-              x: cvs.width,
-              topHeight: Math.floor(Math.random() * 180) + 60,
-              gap: 140,
+              x: canvas.width,
+              topHeight: Math.floor(Math.random() * 140) + 40,
+              gap: 130,
               passed: false
             });
           }
 
-          if (pipes[i].x < -70) pipes.shift();
+          if (p.x < -60) pipes.shift();
 
-          if (!pipes[i].passed && pipes[i].x + pWidth < cowX) {
+          if (!p.passed && p.x + pWidth < cowX) {
             score++;
-            pipes[i].passed = true;
+            p.passed = true;
           }
 
-          // Collision check
-          let cowRadius = 15;
+          // Collision Check
+          let radius = 13;
           if (
-            cowX + cowRadius > pipes[i].x && cowX - cowRadius < pipes[i].x + pWidth &&
-            (cowY - cowRadius < pipes[i].topHeight || cowY + cowRadius > botY) ||
-            cowY + cowRadius >= cvs.height - groundHeight || cowY - cowRadius <= 0
+            cowX + radius > p.x && cowX - radius < p.x + pWidth &&
+            (cowY - radius < p.topHeight || cowY + radius > botY) ||
+            cowY + radius >= canvas.height - 70 || cowY - radius <= 0
           ) {
-            gameState = "GAMEOVER";
+            isGameOver = true;
           }
         }
       }
 
       // Ground
-      let groundY = cvs.height - groundHeight;
-      ctx.fillStyle = "#f1c40f";
-      ctx.fillRect(0, groundY, cvs.width, groundHeight);
-      ctx.fillStyle = "#27ae60";
-      ctx.fillRect(0, groundY, cvs.width, 18);
+      ctx.fillStyle = "#ded895";
+      ctx.fillRect(0, canvas.height - 70, canvas.width, 70);
+      ctx.fillStyle = "#558022";
+      ctx.fillRect(0, canvas.height - 70, canvas.width, 14);
 
-      ctx.fillStyle = "#d35400";
-      for (let g = groundX; g < cvs.width; g += 28) {
+      ctx.fillStyle = "#d0342c";
+      for (let g = groundX; g < canvas.width; g += 24) {
         ctx.beginPath();
-        ctx.moveTo(g, groundY);
-        ctx.lineTo(g + 14, groundY);
-        ctx.lineTo(g + 5, groundY + 18);
-        ctx.lineTo(g - 9, groundY + 18);
+        ctx.moveTo(g, canvas.height - 70);
+        ctx.lineTo(g + 12, canvas.height - 70);
+        ctx.lineTo(g + 4, canvas.height - 56);
+        ctx.lineTo(g - 8, canvas.height - 56);
         ctx.fill();
       }
 
-      // Draw cow
-      if (gameState === "START") {
-        let hoverY = 240 + Math.sin(frameCount * 0.08) * 8;
+      // Cow draw
+      if (!gameStarted) {
+        let hoverY = 200 + Math.sin(frameCount * 0.1) * 6;
         drawCow(cowX, hoverY, 0);
       } else {
         drawCow(cowX, cowY, velocity);
       }
 
-      // UI Text & Screens
-      if (gameState === "PLAYING") {
-        ctx.fillStyle = "#ffffff";
-        ctx.strokeStyle = "#1e3799";
-        ctx.lineWidth = 4;
-        ctx.font = "bold 38px 'Segoe UI', sans-serif";
+      // UI Screens
+      if (!gameStarted) {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 20px Arial";
         ctx.textAlign = "center";
-        ctx.strokeText(score, cvs.width / 2, 60);
-        ctx.fillText(score, cvs.width / 2, 60);
-      } else if (gameState === "START") {
-        ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
-        ctx.fillRect(0, 0, cvs.width, cvs.height);
-
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 24px 'Segoe UI', sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("Press Space to Start", cvs.width / 2, cvs.height / 2 + 30);
-      } else if (gameState === "GAMEOVER") {
+        ctx.fillText("Click or Press Space to Start", canvas.width / 2, canvas.height / 2);
+      } else if (isGameOver) {
         ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-        ctx.fillRect(0, 0, cvs.width, cvs.height);
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Scoreboard card
-        ctx.fillStyle = "#ffffff";
-        ctx.strokeStyle = "#1e3799";
-        ctx.lineWidth = 3;
-        let bx = 60, by = 140, bw = 260, bh = 200, radius = 14;
-        
-        ctx.beginPath();
-        ctx.moveTo(bx + radius, by);
-        ctx.lineTo(bx + bw - radius, by);
-        ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + radius);
-        ctx.lineTo(bx + bw, by + bh - radius);
-        ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - radius, by + bh);
-        ctx.lineTo(bx + radius, by + bh);
-        ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - radius);
-        ctx.lineTo(bx, by + radius);
-        ctx.quadraticCurveTo(bx, by, bx + radius, by);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
+        // Score board
+        ctx.fillStyle = "#ded895";
+        ctx.strokeStyle = "#558022";
+        ctx.lineWidth = 2;
+        ctx.fillRect(60, 120, 200, 160);
+        ctx.strokeRect(60, 120, 200, 160);
 
-        ctx.fillStyle = "#e74c3c";
-        ctx.font = "bold 24px 'Segoe UI', sans-serif";
+        ctx.fillStyle = "#b59e54";
+        ctx.font = "bold 20px Arial";
         ctx.textAlign = "center";
-        ctx.fillText("GAME OVER", cvs.width / 2, by + 45);
+        ctx.fillText("GAME OVER", canvas.width / 2, 150);
 
-        ctx.fillStyle = "#2f3640";
-        ctx.font = "16px 'Segoe UI', sans-serif";
+        ctx.fillStyle = "#558022";
+        ctx.font = "15px Arial";
         ctx.textAlign = "left";
-        ctx.fillText("Score", bx + 25, by + 95);
-        ctx.fillText("Best Score", bx + 25, by + 140);
+        ctx.fillText("SCORE", 85, 190);
+        ctx.fillText("BEST", 85, 230);
 
         ctx.textAlign = "right";
-        ctx.font = "bold 20px 'Segoe UI', sans-serif";
-        ctx.fillStyle = "#27ae60";
-        ctx.fillText(score, bx + bw - 25, by + 95);
-        ctx.fillText(bestScore, bx + bw - 25, by + 140);
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 18px Arial";
+        ctx.fillText(score, 235, 190);
+        ctx.fillText(bestScore, 235, 230);
 
         ctx.textAlign = "center";
-        ctx.fillStyle = "#ffffff";
-        ctx.strokeStyle = "#000000";
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 15px Arial";
+        ctx.fillText("Click to Restart", canvas.width / 2, 310);
+      } else {
+        ctx.fillStyle = "#fff";
+        ctx.strokeStyle = "#000";
         ctx.lineWidth = 3;
-        ctx.font = "bold 16px 'Segoe UI', sans-serif";
-        ctx.strokeText("Press Space to Restart", cvs.width / 2, 400);
-        ctx.fillText("Press Space to Restart", cvs.width / 2, 400);
+        ctx.font = "bold 32px Arial";
+        ctx.textAlign = "center";
+        ctx.strokeText(score, canvas.width / 2, 50);
+        ctx.fillText(score, canvas.width / 2, 50);
       }
 
       requestAnimationFrame(update);
