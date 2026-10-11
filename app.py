@@ -2,7 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(
-    page_title="Flappy Flying Cow - Deluxe Edition",
+    page_title="Flappy Flying Cow",
     page_icon="🐄",
     layout="centered",
     initial_sidebar_state="collapsed"
@@ -10,19 +10,20 @@ st.set_page_config(
 
 st.markdown("""
     <style>
-        .main { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
-        h1 { color: #1e3799; text-align: center; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 2.4rem; margin-bottom: 0px; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
-        .instructions { text-align: center; color: #485460; font-size: 1.1rem; margin-bottom: 15px; font-weight: 500; }
+        .main { background: #f0f2f5; }
+        h1 { color: #1e3799; text-align: center; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 2.2rem; margin-bottom: 0px; }
+        .instructions { text-align: center; color: #57606f; font-size: 1.05rem; margin-bottom: 15px; font-weight: 500; }
     </style>
 """, unsafe_allow_html=True)
 
 st.markdown("<h1>🐄 Flappy Flying Cow</h1>", unsafe_allow_html=True)
-st.markdown("<div class='instructions'>Press the <b>Spacebar</b> or <b>Click</b> inside the game area to fly!</div>", unsafe_allow_html=True)
+st.markdown("<div class='instructions'>Press <b>Spacebar</b> or <b>Click</b> inside the game area to fly!</div>", unsafe_allow_html=True)
 
 game_code = """
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
   <style>
     body {
       margin: 0;
@@ -31,41 +32,41 @@ game_code = """
       background: transparent;
     }
     canvas {
-      border: 4px solid #1e3799;
-      background: linear-gradient(to bottom, #4a69bd, #6a89cc, #786fa6);
+      border: 3px solid #1e3799;
+      background: linear-gradient(to bottom, #4a69bd, #786fa6);
       display: block;
-      box-shadow: 0 14px 35px rgba(0,0,0,0.3);
-      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+      border-radius: 12px;
       outline: none;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="400" height="600" tabindex="1"></canvas>
+  <canvas id="gameCanvas" width="360" height="540" tabindex="1"></canvas>
   <script>
     const cvs = document.getElementById("gameCanvas");
     const ctx = cvs.getContext("2d");
 
-    let cowX = 90, cowY = 260;
-    let gravity = 0.15, velocity = 0, jump = -3.9;
+    let cowX = 80, cowY = 240;
+    let gravity = 0.16, velocity = 0, jump = -4.0;
     let score = 0, bestScore = 0;
     let gameState = "START"; // START, PLAYING, GAMEOVER
     let groundX = 0;
     let frameCount = 0;
 
     let clouds = [
-      { x: 60, y: 100, speed: 0.3, size: 30 },
-      { x: 250, y: 180, speed: 0.3, size: 24 },
-      { x: 360, y: 80, speed: 0.3, size: 35 }
+      { x: 50, y: 90, speed: 0.3, size: 26 },
+      { x: 220, y: 160, speed: 0.3, size: 20 },
+      { x: 320, y: 70, speed: 0.3, size: 30 }
     ];
 
     let pipes = [];
 
     function initGame() {
-      cowY = 260;
+      cowY = 240;
       velocity = 0;
       score = 0;
-      pipes = [{ x: cvs.width, topHeight: 180, gap: 150, passed: false }];
+      pipes = [{ x: cvs.width, topHeight: 160, gap: 140, passed: false }];
     }
 
     function handleInput(e) {
@@ -96,76 +97,64 @@ game_code = """
       let rotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, vel * 0.08));
       ctx.rotate(rotation);
 
-      ctx.scale(1.3, 1.3);
-
-      // Flapping wing
+      // Wing flapping
       let wingAngle = Math.sin(frameCount * 0.35) * 0.55;
       ctx.save();
-      ctx.translate(-2, -9);
+      ctx.translate(-2, -8);
       ctx.rotate(wingAngle);
       ctx.fillStyle = "#ffffff";
       ctx.strokeStyle = "#2f3640";
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1.2;
       ctx.beginPath();
-      ctx.ellipse(0, -6, 9, 4.5, -Math.PI / 4, 0, Math.PI * 2);
+      ctx.ellipse(0, -5, 8, 4, -Math.PI / 4, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
       ctx.restore();
 
-      // Cow body
+      // Body
       ctx.fillStyle = "#ffffff";
       ctx.strokeStyle = "#1e272c";
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.ellipse(0, 0, 18, 13, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 17, 12, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
       // Body spots
       ctx.fillStyle = "#1e272c";
       ctx.beginPath();
-      ctx.arc(-4, -2, 5.5, 0, Math.PI * 2);
-      ctx.arc(3, 4, 3.5, 0, Math.PI * 2);
+      ctx.arc(-4, -2, 5, 0, Math.PI * 2);
+      ctx.arc(3, 3, 3, 0, Math.PI * 2);
       ctx.fill();
 
-      // Cow head
+      // Head
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
-      ctx.arc(14, -4, 9, 0, Math.PI * 2);
+      ctx.arc(13, -4, 8.5, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
-
-      // Blush cheeks
-      ctx.fillStyle = "rgba(255, 107, 129, 0.4)";
-      ctx.beginPath();
-      ctx.arc(17, 0, 3.5, 0, Math.PI * 2);
-      ctx.fill();
 
       // Pink snout
       ctx.fillStyle = "#ffb6c1";
       ctx.beginPath();
-      ctx.ellipse(19, -2, 4.5, 3.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(18, -2, 4, 3, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
       // Eye
       ctx.fillStyle = "#000";
       ctx.beginPath();
-      ctx.arc(16, -7, 1.3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#fff";
-      ctx.beginPath();
-      ctx.arc(16.5, -7.5, 0.4, 0, Math.PI * 2);
+      ctx.arc(15, -7, 1.2, 0, Math.PI * 2);
       ctx.fill();
 
       // Horns
       ctx.fillStyle = "#dcdde1";
       ctx.strokeStyle = "#1e272c";
-      ctx.lineWidth = 1.2;
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(11, -12);
-      ctx.lineTo(14, -17);
-      ctx.lineTo(17, -12);
+      ctx.moveTo(10, -11);
+      ctx.lineTo(13, -16);
+      ctx.lineTo(16, -11);
       ctx.fill();
       ctx.stroke();
 
@@ -178,13 +167,12 @@ game_code = """
       // Sky background
       let bgGrad = ctx.createLinearGradient(0, 0, 0, cvs.height);
       bgGrad.addColorStop(0, "#4a69bd");
-      bgGrad.addColorStop(0.5, "#6a89cc");
-      bgGrad.addColorStop(1, "#82ccdd");
+      bgGrad.addColorStop(1, "#786fa6");
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, cvs.width, cvs.height);
 
       // Clouds
-      ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
       for (let c of clouds) {
         ctx.beginPath();
         ctx.arc(c.x, c.y, c.size, 0, Math.PI * 2);
@@ -192,24 +180,23 @@ game_code = """
         ctx.arc(c.x + c.size * 1.2, c.y, c.size * 0.8, 0, Math.PI * 2);
         ctx.fill();
         c.x -= c.speed;
-        if (c.x < -80) c.x = cvs.width + 80;
+        if (c.x < -60) c.x = cvs.width + 60;
       }
 
-      let groundHeight = 95;
+      let groundHeight = 85;
 
       if (gameState === "PLAYING") {
         velocity += gravity;
         cowY += velocity;
 
-        groundX -= 2.0;
-        if (groundX <= -32) groundX = 0;
+        groundX -= 1.8;
+        if (groundX <= -28) groundX = 0;
 
         // Pipe logic
         for (let i = 0; i < pipes.length; i++) {
-          let pWidth = 64;
+          let pWidth = 56;
           let pipeGrad = ctx.createLinearGradient(pipes[i].x, 0, pipes[i].x + pWidth, 0);
           pipeGrad.addColorStop(0, "#2ecc71");
-          pipeGrad.addColorStop(0.5, "#27ae60");
           pipeGrad.addColorStop(1, "#1e8449");
 
           ctx.fillStyle = pipeGrad;
@@ -219,36 +206,36 @@ game_code = """
           // Top pipe
           ctx.fillRect(pipes[i].x, 0, pWidth, pipes[i].topHeight);
           ctx.strokeRect(pipes[i].x, 0, pWidth, pipes[i].topHeight);
-          ctx.fillRect(pipes[i].x - 5, pipes[i].topHeight - 25, pWidth + 10, 25);
-          ctx.strokeRect(pipes[i].x - 5, pipes[i].topHeight - 25, pWidth + 10, 25);
+          ctx.fillRect(pipes[i].x - 4, pipes[i].topHeight - 22, pWidth + 8, 22);
+          ctx.strokeRect(pipes[i].x - 4, pipes[i].topHeight - 22, pWidth + 8, 22);
 
           // Bottom pipe
           let botY = pipes[i].topHeight + pipes[i].gap;
           ctx.fillRect(pipes[i].x, botY, pWidth, cvs.height - groundHeight - botY);
           ctx.strokeRect(pipes[i].x, botY, pWidth, cvs.height - groundHeight - botY);
-          ctx.fillRect(pipes[i].x - 5, botY, pWidth + 10, 25);
-          ctx.strokeRect(pipes[i].x - 5, botY, pWidth + 10, 25);
+          ctx.fillRect(pipes[i].x - 4, botY, pWidth + 8, 22);
+          ctx.strokeRect(pipes[i].x - 4, botY, pWidth + 8, 22);
 
-          pipes[i].x -= 2.0;
+          pipes[i].x -= 1.8;
 
-          if (pipes[i].x === 160) {
+          if (pipes[i].x === 140) {
             pipes.push({
               x: cvs.width,
-              topHeight: Math.floor(Math.random() * 220) + 70,
-              gap: 150,
+              topHeight: Math.floor(Math.random() * 180) + 60,
+              gap: 140,
               passed: false
             });
           }
 
-          if (pipes[i].x < -80) pipes.shift();
+          if (pipes[i].x < -70) pipes.shift();
 
           if (!pipes[i].passed && pipes[i].x + pWidth < cowX) {
             score++;
             pipes[i].passed = true;
           }
 
-          // Collision detection
-          let cowRadius = 18;
+          // Collision check
+          let cowRadius = 15;
           if (
             cowX + cowRadius > pipes[i].x && cowX - cowRadius < pipes[i].x + pWidth &&
             (cowY - cowRadius < pipes[i].topHeight || cowY + cowRadius > botY) ||
@@ -264,41 +251,39 @@ game_code = """
       ctx.fillStyle = "#f1c40f";
       ctx.fillRect(0, groundY, cvs.width, groundHeight);
       ctx.fillStyle = "#27ae60";
-      ctx.fillRect(0, groundY, cvs.width, 20);
+      ctx.fillRect(0, groundY, cvs.width, 18);
 
       ctx.fillStyle = "#d35400";
-      for (let g = groundX; g < cvs.width; g += 32) {
+      for (let g = groundX; g < cvs.width; g += 28) {
         ctx.beginPath();
         ctx.moveTo(g, groundY);
-        ctx.lineTo(g + 16, groundY);
-        ctx.lineTo(g + 6, groundY + 20);
-        ctx.lineTo(g - 10, groundY + 20);
+        ctx.lineTo(g + 14, groundY);
+        ctx.lineTo(g + 5, groundY + 18);
+        ctx.lineTo(g - 9, groundY + 18);
         ctx.fill();
       }
 
       // Draw cow
       if (gameState === "START") {
-        let hoverY = 260 + Math.sin(frameCount * 0.08) * 10;
+        let hoverY = 240 + Math.sin(frameCount * 0.08) * 8;
         drawCow(cowX, hoverY, 0);
       } else {
         drawCow(cowX, cowY, velocity);
       }
 
-      // UI Screens and Score
+      // UI Text & Screens
       if (gameState === "PLAYING") {
         ctx.fillStyle = "#ffffff";
         ctx.strokeStyle = "#1e3799";
         ctx.lineWidth = 4;
-        ctx.font = "bold 44px 'Segoe UI', sans-serif";
+        ctx.font = "bold 38px 'Segoe UI', sans-serif";
         ctx.textAlign = "center";
-        ctx.strokeText(score, cvs.width / 2, 70);
-        ctx.fillText(score, cvs.width / 2, 70);
+        ctx.strokeText(score, cvs.width / 2, 60);
+        ctx.fillText(score, cvs.width / 2, 60);
       } else if (gameState === "START") {
         ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
         ctx.fillRect(0, 0, cvs.width, cvs.height);
 
         ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 26px 'Segoe UI', sans-serif";
-        ctx.textAlign = "center";
-        ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-        ctx
+        ctx.font = "bold 24px 'Segoe UI', sans-serif";
+        ctx.textAlign =
