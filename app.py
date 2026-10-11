@@ -1,48 +1,45 @@
-import streamlit as st
-import streamlit.components.v1 as components
-
-st.set_page_config(
-    page_title="Flappy Flying Cow",
-    page_icon="🐄",
-    layout="centered",
-    initial_sidebar_state="collapsed"
-)
-
-st.markdown("""
-    <style>
-        .main { background: #f0f2f5; }
-        h1 { color: #1e3799; text-align: center; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 2.2rem; margin-bottom: 0px; }
-        .instructions { text-align: center; color: #57606f; font-size: 1.05rem; margin-bottom: 15px; font-weight: 500; }
-    </style>
-""", unsafe_allow_html=True)
-
-st.markdown("<h1>🐄 Flappy Flying Cow</h1>", unsafe_allow_html=True)
-st.markdown("<div class='instructions'>Press <b>Spacebar</b> or <b>Click</b> inside the game area to fly!</div>", unsafe_allow_html=True)
-
-game_code = """
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flappy Flying Cow</title>
   <style>
     body {
       margin: 0;
+      padding: 0;
+      background: #2c3e50;
       display: flex;
+      flex-direction: column;
       justify-content: center;
-      background: transparent;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      touch-action: manipulation;
+    }
+    h1 {
+      color: #ecf0f1;
+      margin-bottom: 10px;
+      font-size: 1.8rem;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }
     canvas {
-      border: 3px solid #1e3799;
+      border: 4px solid #1abc9c;
       background: linear-gradient(to bottom, #4a69bd, #786fa6);
-      display: block;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
       border-radius: 12px;
       outline: none;
+      max-width: 100%;
+      height: auto;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="360" height="540" tabindex="1"></canvas>
+
+  <h1>🐄 Flappy Flying Cow</h1>
+  <canvas id="gameCanvas" width="380" height="540" tabindex="1"></canvas>
+
   <script>
     const cvs = document.getElementById("gameCanvas");
     const ctx = cvs.getContext("2d");
@@ -57,7 +54,7 @@ game_code = """
     let clouds = [
       { x: 50, y: 90, speed: 0.3, size: 26 },
       { x: 220, y: 160, speed: 0.3, size: 20 },
-      { x: 320, y: 70, speed: 0.3, size: 30 }
+      { x: 340, y: 70, speed: 0.3, size: 30 }
     ];
 
     let pipes = [];
@@ -70,7 +67,7 @@ game_code = """
     }
 
     function handleInput(e) {
-      if (e.code === "Space" || e.type === "click") {
+      if (e.code === "Space" || e.type === "click" || e.type === "touchstart") {
         if (gameState === "START") {
           gameState = "PLAYING";
           initGame();
@@ -83,12 +80,16 @@ game_code = """
           initGame();
           velocity = jump;
         }
-        if (e.code === "Space") e.preventDefault();
+        if (e && e.code === "Space") e.preventDefault();
       }
     }
 
     window.addEventListener("keydown", handleInput);
     cvs.addEventListener("click", handleInput);
+    cvs.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      handleInput(e);
+    }, { passive: false });
     cvs.focus();
 
     function drawCow(x, y, vel) {
@@ -286,4 +287,62 @@ game_code = """
 
         ctx.fillStyle = "#ffffff";
         ctx.font = "bold 24px 'Segoe UI', sans-serif";
-        ctx.textAlign =
+        ctx.textAlign = "center";
+        ctx.fillText("Press Space to Start", cvs.width / 2, cvs.height / 2 + 30);
+      } else if (gameState === "GAMEOVER") {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+        ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+        // Scoreboard card
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = "#1e3799";
+        ctx.lineWidth = 3;
+        let bx = 60, by = 140, bw = 260, bh = 200, radius = 14;
+        
+        ctx.beginPath();
+        ctx.moveTo(bx + radius, by);
+        ctx.lineTo(bx + bw - radius, by);
+        ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + radius);
+        ctx.lineTo(bx + bw, by + bh - radius);
+        ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - radius, by + bh);
+        ctx.lineTo(bx + radius, by + bh);
+        ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - radius);
+        ctx.lineTo(bx, by + radius);
+        ctx.quadraticCurveTo(bx, by, bx + radius, by);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#e74c3c";
+        ctx.font = "bold 24px 'Segoe UI', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("GAME OVER", cvs.width / 2, by + 45);
+
+        ctx.fillStyle = "#2f3640";
+        ctx.font = "16px 'Segoe UI', sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText("Score", bx + 25, by + 95);
+        ctx.fillText("Best Score", bx + 25, by + 140);
+
+        ctx.textAlign = "right";
+        ctx.font = "bold 20px 'Segoe UI', sans-serif";
+        ctx.fillStyle = "#27ae60";
+        ctx.fillText(score, bx + bw - 25, by + 95);
+        ctx.fillText(bestScore, bx + bw - 25, by + 140);
+
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 3;
+        ctx.font = "bold 16px 'Segoe UI', sans-serif";
+        ctx.strokeText("Press Space to Restart", cvs.width / 2, 400);
+        ctx.fillText("Press Space to Restart", cvs.width / 2, 400);
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    update();
+  </script>
+</body>
+</html>
