@@ -16,7 +16,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh ;
+            height: 100vh;
             overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
@@ -375,4 +375,33 @@
             ctx.fillRect(0, canvas.height - this.h, canvas.width, 20);
             ctx.lineWidth = 2;
             ctx.strokeStyle = "#2e5e14";
-            ctx.strokeRect(0, canvas.height - this.h, canvas.width, 2
+            ctx.strokeRect(0, canvas.height - this.h, canvas.width, 20);
+
+            // Lớp đất phía dưới
+            ctx.fillStyle = "#d08135";
+            ctx.fillRect(0, canvas.height - this.h + 20, canvas.width, this.h - 20);
+            ctx.strokeRect(0, canvas.height - this.h + 20, canvas.width, this.h - 20);
+        }
+    };
+
+    // Vòng lặp game
+    function loop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        drawBackground();
+        pipes.draw();
+        pipes.update();
+        foreground.draw();
+        bird.draw();
+        bird.update();
+        score.draw();
+
+        frames++;
+        requestAnimationFrame(loop);
+    }
+
+    loop();
+</script>
+
+</body>
+</html>
